@@ -1,3 +1,5 @@
+import { prefix } from './directives'
+
 import { dequeueJob } from "./scheduler";
 let onAttributeAddeds = []
 let onElRemoveds = []
@@ -50,8 +52,22 @@ let observer = new MutationObserver(onMutate)
 
 let currentlyObserving = false
 
-export function startObservingMutations() {
-    observer.observe(document, { subtree: true, childList: true, attributes: true, attributeOldValue: true })
+let isObservingFullDocument = true
+
+export function startObservingMutations(shouldObserveFullDocument = null) {
+    if (shouldObserveFullDocument !== null) {
+        isObservingFullDocument = shouldObserveFullDocument
+    }
+
+    const options = { subtree: true, childList: true, attributes: true, attributeOldValue: true }
+
+    if (isObservingFullDocument) {
+        observer.observe(document, options)
+    } else {
+        document.querySelectorAll(`[${prefix('data')}]`).forEach(el => {
+            observer.observe(el, options)
+        })
+    }
 
     currentlyObserving = true
 }
